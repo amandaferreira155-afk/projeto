@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Hospitalar - Acesso Individual e Triagem</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- TELA DE LOGIN INDIVIDUAL -->
+  <section id="telaLogin" class="login-wrapper">
+    <div class="login-card">
+      <h1>🏥 Hospital Regional</h1>
+      <p class="login-sub">Identificação individual por perfil</p>
+
+      <div id="erroLogin" class="alerta"></div>
+
+      <form id="formLogin">
+        <label for="loginPerfil">Perfil de Acesso *</label>
+        <select id="loginPerfil" required>
+          <option value="MEDICO">🩺 Médico</option>
+          <option value="ENFERMEIRA">💉 Enfermeira</option>
+          <option value="PACIENTE">🧑 Paciente</option>
+        </select>
+
+        <label for="loginUsuario" id="lblLoginUsuario">Nome ou CRM *</label>
+        <input type="text" id="loginUsuario" placeholder="Digite seu nome ou CRM" required />
+
+        <label for="loginSenha" id="lblLoginSenha">Senha (CPF) *</label>
+        <input type="password" id="loginSenha" placeholder="Digite seu CPF" required />
+
+        <button type="submit" class="btn-primary">Entrar no Sistema</button>
+      </form>
+
+      <!-- ACESSO RÁPIDO PARA NOVO PACIENTE GERAR SEU CÓDIGO -->
+      <div id="blocoNovoPaciente" class="novo-paciente-box oculto">
+        <hr class="divisor" />
+        <button type="button" id="btnAbrirCheckin" class="btn-dark full">
+          Primeiro Acesso? Fazer Check-in
+        </button>
+
+        <form id="formCheckinLogin" class="oculto" style="margin-top: 12px;">
+          <label for="chkNome">Nome Completo *</label>
+          <input type="text" id="chkNome" placeholder="Seu nome completo" required />
+
+          <label for="chkIdade">Idade (0 a 130) *</label>
+          <input type="number" id="chkIdade" min="0" max="130" placeholder="Sua idade" required />
+
+          <label for="chkSintomas">Sintomas Relatados *</label>
+          <input type="text" id="chkSintomas" placeholder="O que você está sentindo?" required />
+
+          <button type="submit" class="btn-success full">Gerar Código e Entrar</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAINEL PRINCIPAL DO SISTEMA -->
+  <div id="telaSistema" class="oculto">
+    <header>
+      <div>
+        <h1>Hospital Regional - Triagem e Atendimento</h1>
+        <small id="subtituloPerfil">Usuário conectado</small>
+      </div>
+      <div class="header-actions">
+        <button id="btnChamarProximo" class="btn-danger">Chamar Próximo Paciente</button>
+        <button id="btnRodarTestes" class="btn-dark">Executar Testes</button>
+        <button id="btnSair" class="btn-outline">Sair</button>
+      </div>
+    </header>
+
+    <div class="container" id="layoutPrincipal">
+      <!-- COLUNA ESQUERDA: FORMULÁRIOS DA EQUIPE -->
+      <div id="colunaFormularios">
+        <div class="card">
+          <h2>Triagem de Paciente</h2>
+          <form id="formPaciente">
+            <label for="pacNome">Nome Completo *</label>
+            <input type="text" id="pacNome" placeholder="Ex: Ana Paula Silva" required />
+
+            <label for="pacIdade">Idade (0 a 130) *</label>
+            <input type="number" id="pacIdade" min="0" max="130" placeholder="Ex: 45" required />
+
+            <label for="pacSintomas">Sintomas Relatados *</label>
+            <input type="text" id="pacSintomas" placeholder="Ex: Dor torácica e falta de ar" required />
+
+            <label for="pacPrio">Classificação de Risco *</label>
+            <select id="pacPrio">
+              <option value="1">1 - Vermelho (Emergência)</option>
+              <option value="2" selected>2 - Amarelo (Urgente)</option>
+              <option value="3">3 - Verde (Pouco Urgente)</option>
+            </select>
+
+            <button type="submit" class="btn-primary">Registrar e Gerar Código</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2>Cadastrar Médico</h2>
+          <form id="formMedico">
+            <label for="medCrm">CRM *</label>
+            <input type="text" id="medCrm" placeholder="Ex: 12345-SC" required />
+
+            <label for="medNome">Nome do Médico *</label>
+            <input type="text" id="medNome" placeholder="Ex: Carlos Andrade" required />
+
+            <label for="medCpf">CPF (Senha de Acesso) *</label>
+            <input type="text" id="medCpf" placeholder="Ex: 111.222.333-44" required />
+
+            <label for="medEsp">Especialidade</label>
+            <input type="text" id="medEsp" placeholder="Padrão: Clínica Geral" />
+
+            <button type="submit" class="btn-dark full">Cadastrar Médico</button>
+          </form>
+        </div>
+
+        <div class="stats" id="painelResumo">Médicos Livres: 0/0 | Altas: 0</div>
+      </div>
+
+      <!-- COLUNA DIREITA: PAINÉIS DE VISUALIZAÇÃO -->
+      <div>
+        <div id="caixaMensagem" class="alerta"></div>
+
+        <!-- ÁREA EXCLUSIVA DO PACIENTE LOGADO (APENAS SEUS DADOS) -->
+        <div class="card oculto" id="cardAreaPaciente">
+          <h2>Meu Atendimento Individual</h2>
+          <div id="conteudoMeuAtendimento"></div>
+        </div>
+
+        <!-- TABELAS GERAIS (EXCLUSIVAS DA EQUIPE HOSPITALAR) -->
+        <div id="painelEquipe">
+          <div class="card">
+            <h2>Fila de Espera (Ordenada por Prioridade)</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Código</th>
+                  <th>Paciente</th>
+                  <th>Idade</th>
+                  <th>Estado / Risco</th>
+                  <th>Sintomas (Prontuário)</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaFila"></tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h2>Pacientes em Atendimento</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Código</th>
+                  <th>Paciente</th>
+                  <th>Médico Responsável</th>
+                  <th>Estado / Risco</th>
+                  <th>Sintomas (Prontuário)</th>
+                  <th>Ação Médica</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaAtendimento"></tbody>
+            </table>
+          </div>
+
+          <div class="card">
+            <h2>Corpo Clínico</h2>
+            <table>
+              <thead>
+                <tr><th>CRM</th><th>Médico</th><th>Especialidade</th><th>Status</th></tr>
+              </thead>
+              <tbody id="tabelaMedicos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
